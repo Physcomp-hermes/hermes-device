@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <WebSocketClient.h>
+#include <Adafruit_NeoPixel.h>
 
 // WIFI connection
 const char* ssid     = "Jamas";
