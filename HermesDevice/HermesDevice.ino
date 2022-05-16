@@ -2,6 +2,13 @@
 #include <WebSocketClient.h>
 #include <Adafruit_NeoPixel.h>
 
+#define PIN       
+#define NUMPIXEL 4
+
+Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+char data = 0;
+
 // WIFI connection
 const char* ssid     = "Jamas";
 const char* password = "jamajama";
@@ -102,6 +109,14 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   delay(1000);
+
+  // neopixel set up
+  #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
+  clock_prescale_set(clock_div_1);
+  #endif
+  // END of Trinket-specific code.
+
+  pixels.begin();
   
 }
 
@@ -124,5 +139,21 @@ void loop() {
   }
   vibrate();
   delay(200);
+
+  pixels.clear(); //sets all the pixel colours off
+
+  if(data == '0') {
+    pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+    pixels.show();
+  }
+
+  if(data == '1') {
+    pixels.setPixelColor(1, pixels.Color(255, 0, 0));
+    pixels.show();
+  }
+
+  
+  
+  
   
 }
