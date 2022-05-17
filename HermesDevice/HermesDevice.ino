@@ -186,6 +186,32 @@ void loop() {
 
   
   
-  
-  
+  void  function(int * input){
+    
+    for(int i =0 ; i < 4; i++){
+      switch(input[i]){
+        
+        case 0:
+          pixels.setPixelColor(i, pixels.Color(150, 0, 0));   //red 
+          break;
+
+        case 1:
+          pixels.setPixelColor(i, pixels.Color(0, 150, 0));   //green
+          break;
+
+        case 2:
+          pixels.setPixelColor(i, pixels.Color(0, 0, 150));   //blue
+          break;
+
+        case 3:
+          pixels.setPixelColor(i, pixels.Color(150, 150, 0)); //yellow
+          break;
+
+        case 4:
+          pixels.setPixelColor(i, pixels.Color(150, 0, 150)); //pink
+          break;  
+      }
+    }
+  }
+
 }
