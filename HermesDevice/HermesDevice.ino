@@ -3,7 +3,7 @@
 #include <Adafruit_NeoPixel.h>
 
 #define PIN 15
-#define NUMPIXEL 4
+#define NUMLED 4
 
 //char data = 0;
 
@@ -13,7 +13,8 @@ const char* password = "jamajama";
 WiFiClient client;
 
 // Socket connection
-char thisID = '2';
+const char* colString = "C-1";
+const char* vibString = "V-1";
 char host[] = "192.168.142.53";
 int port = 5050;
 WebSocketClient webSocketClient;
@@ -26,41 +27,29 @@ int prev_strength = 0;
 char strengthChar; // character used to represent the vibration strength
 
 // Pins used
-int connPin = 23;
-int wifiPin = 22;
 int motorPin = 21; // motor control pin
 
 // Set neopixel
-Adafruit_NeoPixel pixels(NUMPIXEL, PIN, NEO_GRB + NEO_KHZ800);
-int pixelColour[4] = {1,0,0,0};
+Adafruit_NeoPixel pixels(NUMLED, PIN, NEO_GRB + NEO_KHZ800);
+int pixelColour[NUMLED] = {1,1,1,1};
 
 int updateStrength(){
 
   // Make socket connection and update connection status
-  if (client.connect(host, port)) {
-//    Serial.println("Connected");
-    digitalWrite(connPin, LOW);
-  } else {
-//    Serial.println("Connection failed.");
-    digitalWrite(connPin, HIGH);
+  if (!client.connect(host, port)) {
+    Serial.println("Can't connect to client");
     return '0';
   }
   
-//  client.write(thisID);
-  client.write('C');
-  client.write('-');
-  client.write('2');
+  // send vibration signal
+  client.write(vibString);
   delay(50);
   char recvData;
   bool received = 0;
   // Wait for message to be received
   while(!received){
     if(client.available()){
-      for(int i = 0; i < 5; i++){
-        recvData = client.read();
-        Serial.print(recvData);
-      }
-      Serial.print("\n");
+      recvData = client.read();
       received = 1;
     }
   }
@@ -69,11 +58,42 @@ int updateStrength(){
   return recvData;
 }
 
-void update_led(int* input){
+/**
+ * Function that updates device colour from server
+ */
+int updateColour(){
+  
+  // Make socket connection and update connection status
+  if (!client.connect(host, port)) {
+    Serial.println("Can't connect to client");
+    return 1;
+  }
+  client.write(colString);
+  delay(50);
+  char recvData;
+  bool received = 0;
+  int colour = 0;
+  while(!received){
+    if(client.available()){
+      for(int i = 0; i < NUMLED; i++){
+        recvData = client.read();
+        // convert to integer
+        colour = recvData - '0';
+        pixelColour[i] = colour;
+        Serial.print(recvData);
+      }
+      Serial.print("\n");
+      received = 1;
+    }
+  }
+  set_led();
+  return 0;
+}
+
+void set_led(){
   pixels.clear(); //sets all the pixel colours off
-  int led_num = 4; // number of led
-  for(int i =0 ; i < 4; i++){
-    switch(input[i]){
+  for(int i = 0 ; i < NUMLED; i++){
+    switch(pixelColour[i]){
       case 0:
         pixels.setPixelColor(i, pixels.Color(150, 0, 0));   //red 
         break;
@@ -114,7 +134,6 @@ void vibrate(int strength){
     digitalWrite(motorPin, LOW);
     return;
   }
-  
   if(freq_counter == vib_freq){
     vibrating = !vibrating;
     freq_counter = 0;
@@ -130,47 +149,45 @@ void setup() {
   // This function starts the serial and wireless connection
   Serial.begin(115200);
   delay(10);
-//  
-//  // initialise pins
-//  pinMode(motorPin, OUTPUT);
-//  pinMode(connPin, OUTPUT);
-//  pinMode(wifiPin, OUTPUT);
-//  
-//  // Connect to wifi
-//  Serial.println();
-//  Serial.print("Connecting to ");
-//  Serial.println(ssid);
-//  
-//  WiFi.begin(ssid, password);
-//  
-//  while (WiFi.status() != WL_CONNECTED) {
-//    delay(500);
-//    Serial.print(".");
-//  }
-//  digitalWrite(wifiPin, HIGH);
-//  Serial.println("");
-//  Serial.println("WiFi connected");  
-//  Serial.println("IP address: ");
-//  Serial.println(WiFi.localIP());
-//  delay(1000);
-
+  
   // neopixel set up
   #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
   clock_prescale_set(clock_div_1);
   #endif
   // END of Trinket-specific code.
-
+  
   pixels.begin();
-  update_led(pixelColour);
+  pixels.clear();
+  // initialise pins
+  pinMode(motorPin, OUTPUT);
+  
+  // Connect to wifi
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  set_led();
+  Serial.println("");
+  Serial.println("WiFi connected");  
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(1000);
+  updateColour();
 }
 
 void loop() {
+//  updateStrength();
   
-//  strengthChar = updateStrength();
-//  // change vibration strength based on strength
-//  int strength = strengthChar - '0';
-//  Serial.println(strength);
-//  vibrate(strength);
-  delay(200);
+  strengthChar = updateStrength();
+  // change vibration strength based on strength
+  int strength = strengthChar - '0';
+  vibrate(strength);
+  delay(1000);
   
 }
