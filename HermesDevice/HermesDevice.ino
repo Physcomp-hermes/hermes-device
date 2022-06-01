@@ -8,14 +8,15 @@
 //char data = 0;
 
 // WIFI connection
-const char* ssid     = "Jamas";
+const char* ssid     = "SokSok";
 const char* password = "jamajama";
 WiFiClient client;
 
 // Socket connection
 const char* colString = "C-1";
 const char* vibString = "V-1";
-char host[] = "192.168.142.53";
+//char host[] = "192.168.26.53";
+char host[] = "10.0.0.2";
 int port = 5050;
 WebSocketClient webSocketClient;
 
@@ -27,11 +28,11 @@ int prev_strength = 0;
 char strengthChar; // character used to represent the vibration strength
 
 // Pins used
-int motorPin = 21; // motor control pin
+int motorPin = 13; // motor control pin
 
 // Set neopixel
 Adafruit_NeoPixel pixels(NUMLED, PIN, NEO_GRB + NEO_KHZ800);
-int pixelColour[NUMLED] = {1,1,1,1};
+int pixelColour[NUMLED] = {0,0,1,1};
 
 int updateStrength(){
 
@@ -95,19 +96,19 @@ void set_led(){
   for(int i = 0 ; i < NUMLED; i++){
     switch(pixelColour[i]){
       case 0:
-        pixels.setPixelColor(i, pixels.Color(150, 0, 0));   //red 
+        pixels.setPixelColor(i, pixels.Color(150, 0, 150));   //pink
         break;
       case 1:
-        pixels.setPixelColor(i, pixels.Color(0, 150, 0));   //green
+        pixels.setPixelColor(i, pixels.Color(150, 150, 0));   //yellow
         break;
       case 2:
-        pixels.setPixelColor(i, pixels.Color(0, 0, 150));   //blue
+        pixels.setPixelColor(i, pixels.Color(0, 100, 200));   //cyan
         break;
       case 3:
-        pixels.setPixelColor(i, pixels.Color(150, 150, 0)); //yellow
+        pixels.setPixelColor(i, pixels.Color(0, 0, 150)); //blue
         break;
       case 4:
-        pixels.setPixelColor(i, pixels.Color(150, 0, 150)); //pink
+        pixels.setPixelColor(i, pixels.Color(150, 0, 0)); //red
         break;  
     }
   }  
@@ -122,7 +123,7 @@ void vibrate(int strength){
     if(strength == 0){
       vib_freq = 0;
     } else{
-      vib_freq = 4 - strength;
+      vib_freq = 5 - strength;
     }
     freq_counter = 0;
   }
@@ -149,7 +150,6 @@ void setup() {
   // This function starts the serial and wireless connection
   Serial.begin(115200);
   delay(10);
-  
   // neopixel set up
   #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
   clock_prescale_set(clock_div_1);
@@ -158,8 +158,10 @@ void setup() {
   
   pixels.begin();
   pixels.clear();
+  set_led();
   // initialise pins
   pinMode(motorPin, OUTPUT);
+  
   
   // Connect to wifi
   Serial.println();
@@ -179,6 +181,7 @@ void setup() {
   Serial.println(WiFi.localIP());
   delay(1000);
   updateColour();
+  Serial.println(pixelColour[3]);
 }
 
 void loop() {
@@ -187,7 +190,8 @@ void loop() {
   strengthChar = updateStrength();
   // change vibration strength based on strength
   int strength = strengthChar - '0';
+  Serial.println(strength);
   vibrate(strength);
-  delay(1000);
+  delay(200);
   
 }
